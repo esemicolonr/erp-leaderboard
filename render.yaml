@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: erp-leaderboard-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: MOCK_MODE
+        value: false
+      - key: PORT
+        fromService:
+          type: web
+          name: erp-leaderboard-api
+          envVarKey: PORT
+    healthCheckPath: /health

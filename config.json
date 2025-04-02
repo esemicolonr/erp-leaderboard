@@ -1,0 +1,12 @@
+{
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "name": "loyalty_points",
+        "user": "postgres",
+        "password": "postgres",
+        "pool_size": 10,
+        "max_overflow": 5,
+        "pool_timeout": 30
+    }
+}
