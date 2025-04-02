@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Active Users Leaderboard</h1>
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Active Users</span>
+                    <div>
+                        <label for="minutesInput">Active within (minutes): </label>
+                        <input type="number" id="minutesInput" class="form-control d-inline" style="width: 80px;" value="5" min="1">
+                        <button id="refreshButton" class="btn btn-primary">Refresh</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="leaderboard">Loading...</div>
+                <div id="countdown" class="text-muted mt-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Load leaderboard data
+    function loadLeaderboard() {
+        const minutes = $('#minutesInput').val();
+        $.getJSON(`/api/active_users?minutes=${minutes}`, function(data) {
+            let html = '<table class="table">';
+            html += '<thead><tr><th>Rank</th><th>Username</th><th>Points</th><th>Last Updated</th></tr></thead>';
+            html += '<tbody>';
+            
+            data.forEach(function(user, index) {
+                const date = new Date(user.updated_at);
+                const formattedDate = date.toLocaleString();
+                
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${user.username}</td>
+                    <td>${user.points}</td>
+                    <td>${formattedDate}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            
+            if (data.length === 0) {
+                html = '<p>No active users found in the specified time period.</p>';
+            }
+            
+            $('#leaderboard').html(html);
+        });
+    }
+    
+    // Set up auto-refresh
+    function setupAutoRefresh() {
+        const refreshInterval = 5 * 60 * 1000; // 5 minutes in milliseconds
+        setInterval(loadLeaderboard, refreshInterval);
+        
+        // Show countdown
+        let countdown = refreshInterval / 1000;
+        
+        const updateCountdown = function() {
+            countdown -= 1;
+            const minutes = Math.floor(countdown / 60);
+            const seconds = countdown % 60;
+            $('#countdown').text(`Next refresh in ${minutes}:${seconds.toString().padStart(2, '0')}`);
+            
+            if (countdown <= 0) {
+                countdown = refreshInterval / 1000;
+            }
+        };
+        
+        // Initial countdown
+        updateCountdown();
+        
+        // Update countdown every second
+        setInterval(updateCountdown, 1000);
+    }
+    
+    // Handle refresh button
+    $('#refreshButton').click(function() {
+        loadLeaderboard();
+    });
+    
+    // Initial load
+    $(document).ready(function() {
+        loadLeaderboard();
+        setupAutoRefresh();
+    });
+</script>
+{% endblock %}
